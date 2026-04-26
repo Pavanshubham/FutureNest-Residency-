@@ -14,11 +14,19 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the code
-COPY . .
+# Set up a non-root user required by Hugging Face Spaces
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
 
-# Expose the port FastAPI runs on
-EXPOSE 8000
+WORKDIR $HOME/app
+
+# Copy the rest of the code with correct ownership
+COPY --chown=user . $HOME/app
+
+# Expose the port Hugging Face Spaces expects
+EXPOSE 7860
 
 # Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
