@@ -65,6 +65,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid role." }, { status: 400 });
   } catch (error) {
     console.error("Login Error:", error);
-    return NextResponse.json({ error: `An internal server error occurred: ${error.message}` }, { status: 500 });
+    return NextResponse.json({ error: `An internal server error occurred: ${(error as Error).message}` }, { status: 500 });
   }
 }
