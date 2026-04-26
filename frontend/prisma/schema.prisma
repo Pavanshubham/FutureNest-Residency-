@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String
+  role      String   @default("RESIDENT") // RESIDENT, ADMIN, GUARD
+  isApproved Boolean @default(false)
+  passportPhoto String?
+  familyPhoto   String?
+  createdAt DateTime @default(now())
+  
+  // Relations
+  flat      Flat?
+}
+
+model Flat {
+  id            String   @id @default(cuid())
+  wing          String
+  subWing       String
+  flatNumber    String
+  membersCount  Int      @default(1)
+  
+  // Relations
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles      Vehicle[]
+  maintenances  Maintenance[]
+  fines         Fine[]
+  visitors      Visitor[]
+  
+  @@unique([wing, subWing, flatNumber])
+}
+
+model Vehicle {
+  id            String   @id @default(cuid())
+  type          String   // 2-WHEELER or 4-WHEELER
+  numberPlate   String   @unique
+  
+  flatId        String
+  flat          Flat     @relation(fields: [flatId], references: [id], onDelete: Cascade)
+}
+
+model Maintenance {
+  id            String   @id @default(cuid())
+  monthYear     String
+  amount        Float
+  status        String   @default("UNPAID") // UNPAID, PAID
+  razorpayId    String?
+  paidAt        DateTime?
+  
+  flatId        String
+  flat          Flat     @relation(fields: [flatId], references: [id], onDelete: Cascade)
+}
+
+model Fine {
+  id            String   @id @default(cuid())
+  amount        Float    @default(50.0)
+  reason        String
+  bikeNo        String
+  snapshotUrl   String
+  status        String   @default("UNPAID") // UNPAID, PAID
+  razorpayId    String?
+  paidAt        DateTime?
+  
+  flatId        String?
+  flat          Flat?    @relation(fields: [flatId], references: [id], onDelete: SetNull)
+  
+  createdAt     DateTime @default(now())
+}
+
+model Visitor {
+  id            String   @id @default(cuid())
+  name          String
+  mobile        String
+  vehicleNo     String?
+  timeIn        DateTime @default(now())
+  timeOut       DateTime?
+  
+  flatId        String
+  flat          Flat     @relation(fields: [flatId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id            String   @id @default(cuid())
+  title         String
+  message       String
+  type          String   @default("GENERAL") // GENERAL, ALERT
+  attachmentUrl String?
+  attachmentName String?
+  createdAt     DateTime @default(now())
+}
+
+model VehicleLog {
+  id            String   @id @default(cuid())
+  vehicleNo     String
+  isResident    Boolean  @default(false)
+  snapshotUrl   String?
+  timeIn        DateTime?
+  timeOut       DateTime?
+  monthYear     String
+  createdAt     DateTime @default(now())
+}
