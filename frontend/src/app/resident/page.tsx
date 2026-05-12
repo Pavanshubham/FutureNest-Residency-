@@ -59,7 +59,8 @@ export default function ResidentDashboard() {
     // Fetch Notifications
     const fetchNotices = async () => {
       try {
-        const res = await fetch('/api/notifications');
+        const flatNumber = currentResident.flat || currentResident.flatNumber || '';
+        const res = await fetch(`/api/notifications?flat=${encodeURIComponent(flatNumber)}`);
         if (res.ok) {
           const notices = await res.json();
           setNotifications(notices);

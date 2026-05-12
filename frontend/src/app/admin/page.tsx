@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [noticeSubject, setNoticeSubject] = useState('');
   const [noticeMessage, setNoticeMessage] = useState('');
+  const [noticeTarget, setNoticeTarget] = useState('ALL');
   const [noticeFile, setNoticeFile] = useState<File | null>(null);
 
   // Analytics states set to 0 as requested
@@ -29,8 +30,11 @@ export default function AdminDashboard() {
   // Maintenance States
   const [newMaintenanceAmount, setNewMaintenanceAmount] = useState('2500');
   const [newMaintenanceMonth, setNewMaintenanceMonth] = useState('');
+  const [newMaintenanceTarget, setNewMaintenanceTarget] = useState('ALL');
   const [maintenanceHistory, setMaintenanceHistory] = useState<any[]>([]);
   const [maintenanceFilter, setMaintenanceFilter] = useState('');
+  const [maintenanceFlatFilter, setMaintenanceFlatFilter] = useState('');
+  const [violationFlatFilter, setViolationFlatFilter] = useState('');
 
   // Residents & Approvals States
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
@@ -83,6 +87,7 @@ export default function AdminDashboard() {
           const mapped = data.map((d: any) => ({
             id: d.id,
             plate: d.bikeNo,
+            flat: d.flat ? `${d.flat.wing}-${d.flat.subWing}-${d.flat.flatNumber}` : 'N/A',
             reason: d.reason,
             confidence: 'AI Detected', // Mocked or actual if added
             status: d.status,
@@ -250,15 +255,10 @@ export default function AdminDashboard() {
 
       if (res.ok) {
         setCurrentViolations(prev => prev.filter(v => v.id !== violation.id));
-        setHistoryViolations(prev => [{
-          id: violation.id,
-          plate: violation.plate,
-          confidence: violation.confidence,
-          status: 'Unpaid',
-          image: violation.image || violation.snapshot_url,
-          month: new Date().toISOString().substring(0, 7)
-        }, ...prev]);
         alert("Fine of ₹50 approved and sent to Resident.");
+        // We trigger a refresh of the page or just a window location reload, or fetchFines again if we had access to it.
+        // For simplicity, we can do window.location.reload() since it's the admin dashboard.
+        window.location.reload();
       } else {
         alert("Failed to save fine.");
       }
@@ -283,6 +283,7 @@ export default function AdminDashboard() {
       formData.append('title', noticeSubject);
       formData.append('message', noticeMessage);
       formData.append('type', 'GENERAL');
+      formData.append('target', noticeTarget);
       if (noticeFile) {
         formData.append('file', noticeFile);
       }
@@ -293,9 +294,10 @@ export default function AdminDashboard() {
       });
 
       if (res.ok) {
-        alert(`Notice Broadcasted to all Residents!\nSubject: ${noticeSubject}`);
+        alert(`Notice Broadcasted to ${noticeTarget === 'ALL' ? 'All Residents' : noticeTarget}!\nSubject: ${noticeSubject}`);
         setNoticeSubject('');
         setNoticeMessage('');
+        setNoticeTarget('ALL');
         setNoticeFile(null);
       } else {
         alert("Failed to broadcast notice.");
@@ -317,7 +319,17 @@ export default function AdminDashboard() {
       return;
     }
 
-    const payload = approvedResidents.map((res: any) => ({
+    let targetResidents = approvedResidents;
+    if (newMaintenanceTarget !== 'ALL') {
+      targetResidents = approvedResidents.filter((res: any) => res.flat.startsWith(newMaintenanceTarget));
+    }
+
+    if (targetResidents.length === 0) {
+      alert(`No registered residents found for target: ${newMaintenanceTarget}`);
+      return;
+    }
+
+    const payload = targetResidents.map((res: any) => ({
       flatId: res.flatId,
       email: res.email,
       month: newMaintenanceMonth,
@@ -333,7 +345,7 @@ export default function AdminDashboard() {
 
       if (res.ok) {
         // Also update local state for UI
-        const newRecords = approvedResidents.map((res: any) => ({
+        const newRecords = targetResidents.map((res: any) => ({
           id: Date.now() + Math.random(),
           flat: res.flat,
           name: res.name,
@@ -495,11 +507,15 @@ export default function AdminDashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                   <h3>Violation History</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label style={{ color: 'var(--text-secondary)' }}>Target (e.g. A, A1-501):</label>
+                    <input type="text" className="glass-input" value={violationFlatFilter} onChange={(e) => setViolationFlatFilter(e.target.value)} style={{ padding: '5px 10px', width: '150px' }} placeholder="Search Flat..." />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <label style={{ color: 'var(--text-secondary)' }}>Filter by Month:</label>
                     <input type="month" className="glass-input" value={fineFilter} onChange={(e) => setFineFilter(e.target.value)} style={{ padding: '5px 10px', width: 'auto' }} />
                     <button 
                       className="glass-button outline" 
-                      onClick={() => downloadCSV(fineFilter ? historyViolations.filter(v => v.month === fineFilter) : historyViolations, 'violation_history.csv')}
+                      onClick={() => downloadCSV(historyViolations.filter(v => (!fineFilter || v.month === fineFilter) && (!violationFlatFilter || (v.flat && v.flat.startsWith(violationFlatFilter)))), 'violation_history.csv')}
                       style={{ padding: '6px 12px', width: 'auto', fontSize: '0.85rem', borderColor: 'var(--success)', color: 'var(--success)' }}
                     >
                       ⬇️ Download CSV
@@ -511,12 +527,15 @@ export default function AdminDashboard() {
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
                       <th style={{ padding: '1rem' }}>Snapshot</th>
                       <th style={{ padding: '1rem' }}>Number Plate</th>
+                      <th style={{ padding: '1rem' }}>Flat & Wing</th>
                       <th style={{ padding: '1rem' }}>Status</th>
                       <th style={{ padding: '1rem' }}>Receipt</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(fineFilter ? historyViolations.filter(v => v.month === fineFilter) : [...historyViolations.filter(v => v.status === 'UNPAID' || v.status === 'Unpaid'), ...historyViolations.filter(v => v.status === 'PAID' || v.status === 'Paid').slice(0, 5)]).map(v => (
+                    {historyViolations
+                      .filter(v => (!fineFilter || v.month === fineFilter) && (!violationFlatFilter || (v.flat && v.flat.startsWith(violationFlatFilter))))
+                      .map(v => (
                       <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <td style={{ padding: '1rem' }}>
                           <div 
@@ -527,6 +546,7 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                         <td style={{ padding: '1rem', fontWeight: 600 }}>{v.plate}</td>
+                        <td style={{ padding: '1rem', color: 'var(--primary-color)' }}>{v.flat}</td>
                         <td style={{ padding: '1rem', color: (v.status === 'PAID' || v.status === 'Paid') ? 'var(--success)' : 'var(--danger)' }}>{v.status}</td>
                         <td style={{ padding: '1rem' }}>
                           {(v.status === 'PAID' || v.status === 'Paid') ? <button className="glass-button outline" onClick={() => setSelectedReceipt(v)} style={{ width: 'auto', padding: '4px 8px', fontSize: '0.8rem' }}>View Receipt</button> : '-'}
@@ -545,15 +565,19 @@ export default function AdminDashboard() {
               <div className="glass-panel mb-4" style={{ padding: '2rem' }}>
                 <h3 className="mb-4">Add New Maintenance</h3>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                  <div className="form-group" style={{ flex: 1, minWidth: '200px', marginBottom: 0 }}>
+                  <div className="form-group" style={{ flex: 1, minWidth: '150px', marginBottom: 0 }}>
+                    <label>Target Audience</label>
+                    <input type="text" className="glass-input" value={newMaintenanceTarget} onChange={(e) => setNewMaintenanceTarget(e.target.value)} placeholder="e.g. ALL, A, A1" />
+                  </div>
+                  <div className="form-group" style={{ flex: 1, minWidth: '150px', marginBottom: 0 }}>
                     <label>Month & Year</label>
                     <input type="month" className="glass-input" value={newMaintenanceMonth} onChange={(e) => setNewMaintenanceMonth(e.target.value)} />
                   </div>
-                  <div className="form-group" style={{ flex: 1, minWidth: '200px', marginBottom: 0 }}>
+                  <div className="form-group" style={{ flex: 1, minWidth: '150px', marginBottom: 0 }}>
                     <label>Amount (₹)</label>
                     <input type="number" className="glass-input" value={newMaintenanceAmount} onChange={(e) => setNewMaintenanceAmount(e.target.value)} />
                   </div>
-                  <button className="glass-button" onClick={handleGenerateMaintenance} style={{ flex: 1, minWidth: '200px', height: '46px' }}>Generate & Send</button>
+                  <button className="glass-button" onClick={handleGenerateMaintenance} style={{ flex: 1, minWidth: '200px', height: '46px' }}>Generate for {newMaintenanceTarget}</button>
                 </div>
               </div>
 
@@ -561,11 +585,15 @@ export default function AdminDashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                   <h3>Maintenance History</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label style={{ color: 'var(--text-secondary)' }}>Target (e.g. A):</label>
+                    <input type="text" className="glass-input" value={maintenanceFlatFilter} onChange={(e) => setMaintenanceFlatFilter(e.target.value)} style={{ padding: '5px 10px', width: '150px' }} placeholder="Search Flat..." />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <label style={{ color: 'var(--text-secondary)' }}>Filter by Month:</label>
                     <input type="month" className="glass-input" value={maintenanceFilter} onChange={(e) => setMaintenanceFilter(e.target.value)} style={{ padding: '5px 10px', width: 'auto' }} />
                     <button 
                       className="glass-button outline" 
-                      onClick={() => downloadCSV(maintenanceFilter ? maintenanceHistory.filter(m => m.month === maintenanceFilter) : maintenanceHistory, 'maintenance_history.csv')}
+                      onClick={() => downloadCSV(maintenanceHistory.filter(m => (!maintenanceFilter || m.month === maintenanceFilter) && (!maintenanceFlatFilter || m.flat.startsWith(maintenanceFlatFilter))), 'maintenance_history.csv')}
                       style={{ padding: '6px 12px', width: 'auto', fontSize: '0.85rem', borderColor: 'var(--success)', color: 'var(--success)' }}
                     >
                       ⬇️ Download CSV
@@ -584,7 +612,9 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(maintenanceFilter ? maintenanceHistory.filter(m => m.month === maintenanceFilter) : [...maintenanceHistory.filter(m => m.status === 'UNPAID' || m.status === 'Unpaid'), ...maintenanceHistory.filter(m => m.status === 'PAID' || m.status === 'Paid').slice(0, 5)]).map(m => (
+                    {maintenanceHistory
+                      .filter(m => (!maintenanceFilter || m.month === maintenanceFilter) && (!maintenanceFlatFilter || m.flat.startsWith(maintenanceFlatFilter)))
+                      .map(m => (
                       <tr key={m.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <td style={{ padding: '1rem', color: 'var(--primary-color)' }}>{m.flat}</td>
                         <td style={{ padding: '1rem', fontWeight: 600 }}>{m.name}</td>
@@ -680,6 +710,19 @@ export default function AdminDashboard() {
             <div className="glass-panel fade-in" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
               <h3 className="mb-4">Broadcast Notice</h3>
               <div className="form-group">
+                <label>Target Audience</label>
+                <input 
+                  type="text" 
+                  className="glass-input" 
+                  value={noticeTarget} 
+                  onChange={(e) => setNoticeTarget(e.target.value)} 
+                  placeholder="e.g. ALL, A, A1, A1-501" 
+                />
+                <small style={{ color: 'var(--text-secondary)' }}>
+                  Use "ALL" for everyone, "A" for Wing A, "A1" for Subwing A1, "A1-5" for Floor 5, or "A1-501" for a specific flat.
+                </small>
+              </div>
+              <div className="form-group">
                 <label>Notice Subject</label>
                 <input type="text" className="glass-input" value={noticeSubject} onChange={(e) => setNoticeSubject(e.target.value)} placeholder="e.g. Water Supply Update" />
               </div>
@@ -692,7 +735,9 @@ export default function AdminDashboard() {
                 <input type="file" className="glass-input" style={{ padding: '8px' }} accept=".pdf,.csv,.xlsx,.xls,image/*" onChange={(e) => setNoticeFile(e.target.files?.[0] || null)} />
                 <small style={{ color: 'var(--text-secondary)' }}>You can upload PDF, Excel, CSV, or Image files.</small>
               </div>
-              <button className="glass-button mt-4" onClick={handleSendNotice}>Send to All Residents</button>
+              <button className="glass-button mt-4" onClick={handleSendNotice}>
+                Send Notice to {noticeTarget === 'ALL' ? 'All Residents' : noticeTarget}
+              </button>
             </div>
           )}
 

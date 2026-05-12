@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -94,6 +95,7 @@ model Notification {
   title         String
   message       String
   type          String   @default("GENERAL") // GENERAL, ALERT
+  target        String   @default("ALL")     // ALL, WING (e.g. A), SUBWING (e.g. A1), FLOOR (e.g. A1-5), FLAT (e.g. A1-501)
   attachmentUrl String?
   attachmentName String?
   createdAt     DateTime @default(now())

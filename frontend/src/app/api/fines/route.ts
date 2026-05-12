@@ -41,9 +41,8 @@ export async function POST(req: Request) {
     const data = await req.json();
     const { amount, reason, bikeNo, snapshotUrl } = data;
 
-    // Find the vehicle to get the flatId
-    const vehicle = await prisma.vehicle.findUnique({
-      where: { numberPlate: bikeNo },
+    // Find the vehicle to get the flatId (ignoring spaces)
+    const vehicles = await prisma.vehicle.findMany({
       include: {
         flat: {
           include: {
@@ -52,6 +51,9 @@ export async function POST(req: Request) {
         }
       }
     });
+
+    const normalizedBikeNo = bikeNo.replace(/\s+/g, '').toUpperCase();
+    const vehicle = vehicles.find(v => v.numberPlate.replace(/\s+/g, '').toUpperCase() === normalizedBikeNo);
 
     let flatId = null;
     let email = null;

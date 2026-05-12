@@ -3,13 +3,24 @@ import prisma from '@/lib/prisma';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const flat = searchParams.get('flat');
+
     const notifications = await prisma.notification.findMany({
       orderBy: { createdAt: 'desc' },
-      take: 20
+      take: 50
     });
-    return NextResponse.json(notifications);
+
+    let filteredNotifications = notifications;
+    if (flat) {
+      filteredNotifications = notifications.filter(n => 
+        n.target === "ALL" || flat.startsWith(n.target)
+      );
+    }
+
+    return NextResponse.json(filteredNotifications);
   } catch (error) {
     console.error("Fetch Notifications Error:", error);
     return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
@@ -23,6 +34,7 @@ export async function POST(req: Request) {
     let title = '';
     let message = '';
     let type = 'GENERAL';
+    let target = 'ALL';
     let attachmentUrl = null;
     let attachmentName = null;
 
@@ -31,6 +43,7 @@ export async function POST(req: Request) {
       title = formData.get('title') as string;
       message = formData.get('message') as string;
       type = (formData.get('type') as string) || 'GENERAL';
+      target = (formData.get('target') as string) || 'ALL';
       
       const file = formData.get('file') as File | null;
       if (file && file.size > 0) {
@@ -55,6 +68,7 @@ export async function POST(req: Request) {
       title = data.title;
       message = data.message;
       type = data.type || "GENERAL";
+      target = data.target || "ALL";
     }
 
     const newNotification = await prisma.notification.create({
@@ -62,6 +76,7 @@ export async function POST(req: Request) {
         title,
         message,
         type,
+        target,
         attachmentUrl,
         attachmentName
       }
