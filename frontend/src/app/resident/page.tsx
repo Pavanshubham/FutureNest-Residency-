@@ -257,8 +257,8 @@ export default function ResidentDashboard() {
                     <p style={{ marginTop: '5px' }}>{n.message}</p>
                     {n.attachmentUrl && (
                       <div style={{ marginTop: '8px' }}>
-                        <a href={n.attachmentUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--success)', textDecoration: 'none', fontSize: '0.85rem', border: '1px solid var(--success)', padding: '2px 8px', borderRadius: '12px', display: 'inline-block' }}>
-                          📎 View {n.attachmentName || 'Attachment'}
+                        <a href={n.attachmentUrl} download={n.attachmentName || 'Attachment'} style={{ color: 'var(--success)', textDecoration: 'none', fontSize: '0.85rem', border: '1px solid var(--success)', padding: '2px 8px', borderRadius: '12px', display: 'inline-block' }}>
+                          📎 Download {n.attachmentName || 'Attachment'}
                         </a>
                       </div>
                     )}

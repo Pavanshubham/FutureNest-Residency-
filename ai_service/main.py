@@ -9,6 +9,9 @@ from plate_reader import read_number_plate
 import uuid
 from datetime import datetime
 
+# Get Base URL from environment, or default to localhost
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000").rstrip("/")
+
 app = FastAPI(title="SecureGate 360 - AI Service")
 
 # Allow CORS for Next.js Frontend
@@ -52,7 +55,7 @@ async def process_video(file: UploadFile = File(...)):
             "id": str(uuid.uuid4()),
             "plate": "MH 05 AC 5623",
             "confidence": "92.5%",
-            "snapshot_url": "http://localhost:8000/snapshots/mock.jpg", # Assuming mock exists or just breaks
+            "snapshot_url": f"{BASE_URL}/snapshots/mock.jpg", # Assuming mock exists or just breaks
             "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
         return {"status": "success", "violations": violations}
@@ -105,7 +108,7 @@ async def process_video(file: UploadFile = File(...)):
                                 "id": str(uuid.uuid4()),
                                 "plate": plate_text,
                                 "confidence": f"{conf*100:.1f}%",
-                                "snapshot_url": f"http://localhost:8000/snapshots/{snap_filename}",
+                                "snapshot_url": f"{BASE_URL}/snapshots/{snap_filename}",
                                 "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             })
                             
@@ -139,7 +142,7 @@ async def process_gate(file: UploadFile = File(...)):
             "id": str(uuid.uuid4()),
             "plate": "MH 12 AB 1234",
             "confidence": "95.0%",
-            "snapshot_url": "http://localhost:8000/snapshots/mock.jpg",
+            "snapshot_url": f"{BASE_URL}/snapshots/mock.jpg",
             "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
         return {"status": "success", "vehicles": detected_vehicles}
@@ -179,7 +182,7 @@ async def process_gate(file: UploadFile = File(...)):
                             "id": str(uuid.uuid4()),
                             "plate": plate_text,
                             "confidence": f"{conf*100:.1f}%",
-                            "snapshot_url": f"http://localhost:8000/snapshots/{snap_filename}",
+                            "snapshot_url": f"{BASE_URL}/snapshots/{snap_filename}",
                             "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         })
                         break 
