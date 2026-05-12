@@ -206,7 +206,8 @@ export default function AdminDashboard() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await fetch('http://localhost:8000/process-video', {
+      const aiUrl = process.env.NEXT_PUBLIC_AI_URL || 'http://localhost:8000';
+      const response = await fetch(`${aiUrl}/process-video`, {
         method: 'POST',
         body: formData,
       });

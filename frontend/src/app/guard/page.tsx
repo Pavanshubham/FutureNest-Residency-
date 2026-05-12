@@ -54,7 +54,8 @@ export default function GuardDashboard() {
     formData.append("file", file);
     
     try {
-      const aiRes = await fetch('http://localhost:8000/process-gate', {
+      const aiUrl = process.env.NEXT_PUBLIC_AI_URL || 'http://localhost:8000';
+      const aiRes = await fetch(`${aiUrl}/process-gate`, {
         method: 'POST',
         body: formData
       });
