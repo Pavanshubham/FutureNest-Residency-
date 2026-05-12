@@ -59,7 +59,7 @@ export default function ResidentDashboard() {
     // Fetch Notifications
     const fetchNotices = async () => {
       try {
-        const flatNumber = currentResident.flat || currentResident.flatNumber || '';
+        const flatNumber = currentResident.flat || (currentResident as any).flatNumber || '';
         const res = await fetch(`/api/notifications?flat=${encodeURIComponent(flatNumber)}`);
         if (res.ok) {
           const notices = await res.json();
@@ -73,9 +73,9 @@ export default function ResidentDashboard() {
 
     // Fetch Fines from Database
     const fetchFines = async () => {
-      if (!currentResident.flatId) return;
+      if (!(currentResident as any).flatId) return;
       try {
-        const res = await fetch(`/api/fines?flatId=${currentResident.flatId}`);
+        const res = await fetch(`/api/fines?flatId=${(currentResident as any).flatId}`);
         if (res.ok) {
           const data = await res.json();
           const mapped = data.map((item: any) => ({
@@ -97,9 +97,9 @@ export default function ResidentDashboard() {
 
     // Fetch Maintenance from Database
     const fetchMaintenance = async () => {
-      if (!currentResident.flatId) return;
+      if (!(currentResident as any).flatId) return;
       try {
-        const res = await fetch(`/api/maintenance?flatId=${currentResident.flatId}`);
+        const res = await fetch(`/api/maintenance?flatId=${(currentResident as any).flatId}`);
         if (res.ok) {
           const data = await res.json();
           const mapped = data.map((item: any) => ({
