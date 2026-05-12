@@ -11,10 +11,10 @@ export async function sendReceiptEmail(toEmail: string, pdfBuffer: Buffer, type:
     });
 
     const mailOptions = {
-      from: `"SecureGate 360 Admin" <${process.env.ADMIN_EMAIL}>`,
+      from: `"Future Nest Residency Admin" <${process.env.ADMIN_EMAIL}>`,
       to: toEmail,
-      subject: `Payment Receipt - ${type} - SecureGate 360`,
-      text: `Dear Resident,\n\nThank you for your payment towards ${type}. Please find your payment receipt attached to this email.\n\nRegards,\nAdmin,\nSecureGate 360`,
+      subject: `Payment Receipt - ${type} - Future Nest Residency`,
+      text: `Dear Resident,\n\nThank you for your payment towards ${type}. Please find your payment receipt attached to this email.\n\nRegards,\nAdmin,\nFuture Nest Residency`,
       attachments: [
         {
           filename: `Receipt_${type}.pdf`,

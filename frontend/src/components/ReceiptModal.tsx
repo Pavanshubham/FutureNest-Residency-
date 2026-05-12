@@ -10,7 +10,7 @@ export default function ReceiptModal({ receiptData, onClose }: { receiptData: an
         
         {/* Receipt Header */}
         <div style={{ textAlign: 'center', borderBottom: '2px dashed #ccc', paddingBottom: '1rem', marginBottom: '1rem' }}>
-          <h2 style={{ color: '#4facfe', margin: 0 }}>SecureGate 360</h2>
+          <h2 style={{ color: '#4facfe', margin: 0 }}>Future Nest Residency</h2>
           <p style={{ fontSize: '0.85rem', color: '#666', margin: 0 }}>Payment Receipt</p>
         </div>
 

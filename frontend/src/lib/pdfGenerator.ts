@@ -24,7 +24,7 @@ export async function generateReceiptPDF(paymentDetails: {
       doc
         .fillColor('#4facfe')
         .fontSize(24)
-        .text('SecureGate 360', { align: 'center' })
+        .text('Future Nest Residency', { align: 'center' })
         .fontSize(10)
         .fillColor('#666666')
         .text('Smart Society Management System', { align: 'center' })
@@ -63,7 +63,7 @@ export async function generateReceiptPDF(paymentDetails: {
         .fontSize(10)
         .fillColor('#888888')
         .text('This is a computer-generated receipt and does not require a signature.', { align: 'center' })
-        .text('For queries, contact admin@securegate360.com', { align: 'center' });
+        .text('For queries, contact admin@futurenestresidency.com', { align: 'center' });
 
       doc.end();
     } catch (error) {
