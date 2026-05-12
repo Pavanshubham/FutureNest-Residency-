@@ -44,10 +44,10 @@ export async function sendMaintenanceEmail(toEmail: string, month: string, amoun
     });
 
     const mailOptions = {
-      from: `"SecureGate 360 Admin" <${process.env.ADMIN_EMAIL}>`,
+      from: `"Future Nest Residency Admin" <${process.env.ADMIN_EMAIL}>`,
       to: toEmail,
-      subject: `Maintenance Generated for ${month} - SecureGate 360`,
-      text: `Dear Resident,\n\nYour society maintenance for the month of ${month} has been generated.\nAmount Due: ₹${amount}\n\nPlease login to your SecureGate 360 dashboard to pay the maintenance.\n\nRegards,\nAdmin,\nSecureGate 360`,
+      subject: `Maintenance Generated for ${month} - Future Nest Residency`,
+      text: `Dear Resident,\n\nYour society maintenance for the month of ${month} has been generated.\nAmount Due: ₹${amount}\n\nPlease login to your Future Nest Residency dashboard to pay the maintenance.\n\nRegards,\nAdmin,\nFuture Nest Residency`,
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -70,10 +70,10 @@ export async function sendFineEmail(toEmail: string, bikeNo: string, amount: num
     });
 
     const mailOptions = {
-      from: `"SecureGate 360 Admin" <${process.env.ADMIN_EMAIL}>`,
+      from: `"Future Nest Residency Admin" <${process.env.ADMIN_EMAIL}>`,
       to: toEmail,
-      subject: `Traffic Violation Fine Generated - SecureGate 360`,
-      text: `Dear Resident,\n\nA traffic violation fine (No Helmet) has been generated for your vehicle ${bikeNo}.\nAmount Due: ₹${amount}\n\nPlease login to your SecureGate 360 dashboard to view the snapshot and pay the fine.\n\nRegards,\nAdmin,\nSecureGate 360`,
+      subject: `Traffic Violation Fine Generated - Future Nest Residency`,
+      text: `Dear Resident,\n\nA traffic violation fine (No Helmet) has been generated for your vehicle ${bikeNo}.\nAmount Due: ₹${amount}\n\nPlease login to your Future Nest Residency dashboard to view the snapshot and pay the fine.\n\nRegards,\nAdmin,\nFuture Nest Residency`,
     };
 
     const info = await transporter.sendMail(mailOptions);

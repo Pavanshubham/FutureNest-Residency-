@@ -133,10 +133,10 @@ export default function ResidentDashboard() {
       const order = await response.json();
 
       const options = {
-        key: "rzp_test_SgS0C6K78awCI9",
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_SgS0C6K78awCI9',
         amount: order.amount,
         currency: order.currency,
-        name: "SecureGate 360",
+        name: "Future Nest Residency",
         description: `${type} Payment for Flat ${resident.flat}`,
         order_id: order.id,
         handler: async function (response: any) {

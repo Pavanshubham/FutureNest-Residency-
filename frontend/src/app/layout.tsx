@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SecureGate 360 | AI Society Management",
-  description: "Advanced AI-Driven Society Management & Traffic Enforcement Platform.",
+  title: "Future Nest Residency | AI Society Management",
+  description: "Advanced society management and gate security system powered by AI.",
 };
 
 export default function RootLayout({
