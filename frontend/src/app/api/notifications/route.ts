@@ -49,18 +49,8 @@ export async function POST(req: Request) {
       if (file && file.size > 0) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        
-        const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const path = join(process.cwd(), 'public', 'uploads', filename);
-        
-        // Ensure uploads directory exists
-        try {
-          const fs = await import('fs/promises');
-          await fs.mkdir(join(process.cwd(), 'public', 'uploads'), { recursive: true });
-        } catch (e) {}
-
-        await writeFile(path, buffer);
-        attachmentUrl = `/uploads/${filename}`;
+        const mimeType = file.type || 'application/octet-stream';
+        attachmentUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
         attachmentName = file.name;
       }
     } else {

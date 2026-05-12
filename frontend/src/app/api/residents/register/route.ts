@@ -35,27 +35,21 @@ export async function POST(req: Request) {
     if (existingFlat) {
       return NextResponse.json({ error: "Registration for this flat already exists." }, { status: 400 });
     }
-
-    // Save Photos to public/uploads directory
-    const uploadDir = path.join(process.cwd(), 'public/uploads');
-    
     let passportPhotoUrl = null;
     let familyPhotoUrl = null;
 
     if (passportPhoto) {
       const bytes = await passportPhoto.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const filename = `${Date.now()}_passport_${passportPhoto.name.replace(/\\s+/g, '_')}`;
-      await fs.writeFile(path.join(uploadDir, filename), buffer);
-      passportPhotoUrl = `/uploads/${filename}`;
+      const mimeType = passportPhoto.type || 'image/jpeg';
+      passportPhotoUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
     }
 
     if (familyPhoto) {
       const bytes = await familyPhoto.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const filename = `${Date.now()}_family_${familyPhoto.name.replace(/\\s+/g, '_')}`;
-      await fs.writeFile(path.join(uploadDir, filename), buffer);
-      familyPhotoUrl = `/uploads/${filename}`;
+      const mimeType = familyPhoto.type || 'image/jpeg';
+      familyPhotoUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
     }
 
     const newUser = await prisma.user.create({
